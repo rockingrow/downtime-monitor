@@ -115,10 +115,10 @@ def _daemonize_unix() -> None:
 
     sys.stdout.flush()
     sys.stderr.flush()
-    devnull = open(os.devnull, "a+")
-    os.dup2(open(os.devnull, "r").fileno(), sys.stdin.fileno())
-    os.dup2(devnull.fileno(), sys.stdout.fileno())
-    os.dup2(devnull.fileno(), sys.stderr.fileno())
+    with open(os.devnull, "rb") as devnull_r, open(os.devnull, "ab") as devnull_w:
+        os.dup2(devnull_r.fileno(), 0)
+        os.dup2(devnull_w.fileno(), 1)
+        os.dup2(devnull_w.fileno(), 2)
 
 
 def _spawn_detached_windows() -> None:
