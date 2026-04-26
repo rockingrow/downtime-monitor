@@ -64,7 +64,10 @@ def log_downtime(start: datetime.datetime, end: datetime.datetime) -> None:
     )
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(line)
-    print(f"[logged] {line.rstrip()}", flush=True)
+    try:
+        print(f"[logged] {line.rstrip()}", flush=True)
+    except Exception:
+        pass
 
 def log_event(msg: str) -> None:
     """Append a timestamped operational event to today's log."""
@@ -74,7 +77,10 @@ def log_event(msg: str) -> None:
     line = f"{now.strftime('%Y-%m-%d %H:%M:%S')} UTC | {msg}\n"
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(line)
-    print(f"[event]  {msg}", flush=True)
+    try:
+        print(f"[event]  {msg}", flush=True)
+    except Exception:
+        pass
 
 # ---------------------------------------------------------------------------
 # Main monitoring loop
@@ -147,24 +153,76 @@ def write_pid() -> None:
 
 
 def stop_background() -> None:
-    if not os.path.exists(PID_FILE):
-        print("No PID file found — monitor may not be running.")
-        return
-    with open(PID_FILE) as fh:
-        pid = int(fh.read().strip())
-    try:
-        if sys.platform == "win32":
-            import ctypes
-            handle = ctypes.windll.kernel32.OpenProcess(1, False, pid)
-            ctypes.windll.kernel32.TerminateProcess(handle, 0)
+    import subprocess
+    script_name = os.path.basename(__file__)
+    current_pid = os.getpid()
+    killed_count = 0
+
+    if sys.platform == "win32":
+        try:
+            cmd = f'wmic process where "name like \'%python%\' and commandline like \'%{script_name}%\'" get processid'
+            output = subprocess.check_output(cmd, shell=True, text=True)
+            for line in output.splitlines():
+                line = line.strip()
+                if line.isdigit():
+                    pid = int(line)
+                    if pid != current_pid:
+                        try:
+                            import ctypes
+                            handle = ctypes.windll.kernel32.OpenProcess(1, False, pid)
+                            if handle:
+                                ctypes.windll.kernel32.TerminateProcess(handle, 0)
+                                ctypes.windll.kernel32.CloseHandle(handle)
+                                killed_count += 1
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+    else:
+        import signal
+        try:
+            output = subprocess.check_output(["pgrep", "-f", script_name], text=True)
+            for line in output.splitlines():
+                line = line.strip()
+                if line.isdigit():
+                    pid = int(line)
+                    if pid != current_pid:
+                        try:
+                            os.kill(pid, signal.SIGTERM)
+                            killed_count += 1
+                        except OSError:
+                            pass
+        except Exception:
+            pass
+
+    if killed_count > 0:
+        print(f"Stopped {killed_count} monitor process(es).")
+    else:
+        if os.path.exists(PID_FILE):
+            with open(PID_FILE) as fh:
+                try:
+                    pid = int(fh.read().strip())
+                    if pid != current_pid:
+                        if sys.platform == "win32":
+                            import ctypes
+                            handle = ctypes.windll.kernel32.OpenProcess(1, False, pid)
+                            if handle:
+                                ctypes.windll.kernel32.TerminateProcess(handle, 0)
+                                ctypes.windll.kernel32.CloseHandle(handle)
+                        else:
+                            import signal
+                            os.kill(pid, signal.SIGTERM)
+                        print(f"Stopped monitor (PID {pid})")
+                except Exception:
+                    print("No running monitor found.")
         else:
-            import signal
-            os.kill(pid, signal.SIGTERM)
-        os.remove(PID_FILE)
-        print(f"Stopped monitor (PID {pid})")
-    except (ProcessLookupError, OSError):
-        print(f"Process {pid} not found — removing stale PID file.")
-        os.remove(PID_FILE)
+            print("No running monitor found.")
+
+    if os.path.exists(PID_FILE):
+        try:
+            os.remove(PID_FILE)
+        except OSError:
+            pass
 
 # ---------------------------------------------------------------------------
 # Entry point

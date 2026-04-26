@@ -14,6 +14,14 @@ python monitor.py --daemon     # run detached in the background
 python monitor.py --stop       # stop the background instance
 ```
 
+```sh
+# Manual check script on Linux
+pgrep -f monitor.py
+
+# Kill processes
+kill <pid>
+```
+
 ## How it works
 
 Every 5 seconds the script attempts a TCP connection to `8.8.8.8:53` (Google DNS) and `1.1.1.1:53` (Cloudflare DNS).
