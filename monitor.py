@@ -14,6 +14,8 @@ import time
 import socket
 import datetime
 
+from notifier import send_telegram_message
+
 UTC = datetime.timezone.utc
 
 # ---------------------------------------------------------------------------
@@ -68,6 +70,7 @@ def log_downtime(start: datetime.datetime, end: datetime.datetime) -> None:
         print(f"[logged] {line.rstrip()}", flush=True)
     except Exception:
         pass
+    send_telegram_message(f"🔴 Downtime recorded\n{line.strip()}")
 
 def log_event(msg: str) -> None:
     """Append a timestamped operational event to today's log."""
@@ -81,6 +84,7 @@ def log_event(msg: str) -> None:
         print(f"[event]  {msg}", flush=True)
     except Exception:
         pass
+    send_telegram_message(line.strip())
 
 # ---------------------------------------------------------------------------
 # Main monitoring loop
