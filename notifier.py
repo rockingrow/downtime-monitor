@@ -8,6 +8,7 @@ a message to that chat. Uses only the standard library, so no extra
 dependency (e.g. python-dotenv, requests) is required.
 """
 
+import ssl
 import os
 import json
 import urllib.request
@@ -64,8 +65,15 @@ def send_telegram_message(text: str, timeout: float = 5.0) -> bool:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
+
+    # 2. Create context to avoid SSL certificate verification
+    context = ssl._create_unverified_context()
+
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
+            print(f"Success! Status code: {resp.status}")
             return resp.status == 200
-    except (urllib.error.URLError, OSError, ValueError):
+    except Exception as e:
+        # Print the error to the CMD screen to see what went wrong
+        print(f"Script failed due to error: {type(e).__name__} - {e}")
         return False
