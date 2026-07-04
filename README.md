@@ -43,6 +43,25 @@ Edit the constants at the top of `monitor.py`:
 | `PING_OVER` | `100` | High-ping threshold (ms) |
 | `DNS_TARGETS` | Google + Cloudflare | List of `(host, port)` targets |
 
+## Telegram notifications
+
+The monitor can push every downtime and event log line to a Telegram chat via `notifier.py` (standard library only, no extra dependency required).
+
+1. Create a bot with [@BotFather](https://t.me/BotFather) and copy the bot token.
+2. Get your chat ID (e.g. message [@userinfobot](https://t.me/userinfobot), or call `getUpdates` on your bot).
+3. Copy `.env.example` to `.env` and fill in the values:
+
+```sh
+cp .env.example .env
+```
+
+```env
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_CHAT_ID=your_chat_id_here
+```
+
+`.env` is gitignored and loaded automatically on startup. If `TELEGRAM_BOT_TOKEN` or `TELEGRAM_CHAT_ID` is missing, notifications are silently skipped and the monitor keeps running normally.
+
 ## Log files
 
 Logs are written to `logs/YYYYMMDD.txt` (one file per UTC day). All timestamps are UTC.
