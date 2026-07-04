@@ -36,6 +36,7 @@ def _load_env_file(path: str) -> None:
 
 _load_env_file(ENV_FILE)
 
+SERVER = os.environ.get("SERVER", "")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
@@ -55,7 +56,7 @@ def send_telegram_message(text: str, timeout: float = 5.0) -> bool:
         return False
 
     url = TELEGRAM_API_URL.format(token=TELEGRAM_BOT_TOKEN)
-    payload = json.dumps({"chat_id": TELEGRAM_CHAT_ID, "text": text}).encode("utf-8")
+    payload = json.dumps({"chat_id": TELEGRAM_CHAT_ID, "text": f"[{SERVER}]\n{text}"}).encode("utf-8")
     req = urllib.request.Request(
         url,
         data=payload,
