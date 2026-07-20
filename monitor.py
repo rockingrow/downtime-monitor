@@ -28,7 +28,9 @@ DNS_TARGETS = [
 ]
 CHECK_INTERVAL = 5    # seconds between each connectivity probe
 SOCK_TIMEOUT   = 3    # socket connect timeout
-PING_OVER      = 100  # ms; log a warning when DNS connect latency exceeds this
+# ms; log a warning when DNS connect latency exceeds this (importing notifier
+# above has already loaded the .env file into os.environ)
+PING_OVER      = int(os.environ.get("PING_OVER", 300))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR  = os.path.join(BASE_DIR, "logs")

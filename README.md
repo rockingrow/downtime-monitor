@@ -40,8 +40,13 @@ Edit the constants at the top of `monitor.py`:
 | --- | --- | --- |
 | `CHECK_INTERVAL` | `5` | Seconds between probes |
 | `SOCK_TIMEOUT` | `3` | TCP connect timeout (seconds) |
-| `PING_OVER` | `100` | High-ping threshold (ms) |
 | `DNS_TARGETS` | Google + Cloudflare | List of `(host, port)` targets |
+
+These are read from `.env` (see `.env.example`):
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PING_OVER` | `300` | High-ping threshold (ms) |
 
 ## Telegram notifications
 
