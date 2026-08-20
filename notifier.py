@@ -43,6 +43,20 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 
+def _parse_chat_id(raw: str):
+    """Split a TELEGRAM_CHAT_ID into (chat_id, message_thread_id).
+
+    Supports the plain "-1001234567890" form as well as the
+    "-1001234567890_13" form used to target a specific topic/thread inside
+    a group (the part after the underscore is Telegram's message_thread_id).
+    message_thread_id is None when no thread suffix is present.
+    """
+    chat_id, sep, thread_id = raw.partition("_")
+    if sep and thread_id.lstrip("-").isdigit():
+        return chat_id, int(thread_id)
+    return raw, None
+
+
 def is_configured() -> bool:
     """Whether both TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set."""
     return bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
@@ -58,7 +72,11 @@ def send_telegram_message(text: str, timeout: float = 5.0) -> bool:
         return False
 
     url = TELEGRAM_API_URL.format(token=TELEGRAM_BOT_TOKEN)
-    payload = json.dumps({"chat_id": TELEGRAM_CHAT_ID, "text": f"[{SERVER}][{SERVICE}]\n{text}"}).encode("utf-8")
+    chat_id, message_thread_id = _parse_chat_id(TELEGRAM_CHAT_ID)
+    body = {"chat_id": chat_id, "text": f"[{SERVER}][{SERVICE}]\n{text}"}
+    if message_thread_id is not None:
+        body["message_thread_id"] = message_thread_id
+    payload = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
         url,
         data=payload,

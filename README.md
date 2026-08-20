@@ -67,6 +67,8 @@ TELEGRAM_CHAT_ID=your_chat_id_here
 
 `.env` is gitignored and loaded automatically on startup. If `TELEGRAM_BOT_TOKEN` or `TELEGRAM_CHAT_ID` is missing, notifications are silently skipped and the monitor keeps running normally.
 
+To send messages into a specific topic/thread of a group (forum-enabled groups), append the thread id after an underscore: `TELEGRAM_CHAT_ID=-1004359119635_13`. The part before the underscore is the group's chat id, and the part after is Telegram's `message_thread_id`.
+
 ## Log files
 
 Logs are written to `logs/YYYYMMDD.txt` (one file per UTC day). All timestamps are UTC.
